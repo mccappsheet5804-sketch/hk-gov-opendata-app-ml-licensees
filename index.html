@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>現有放債人牌照持牌人名單查詢系統</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f5f5f5;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #1a2530);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 i {
+            color: #3498db;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            max-width: 800px;
+        }
+
+        .header .data-source {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: #ecf0f1;
+        }
+
+        .header .data-source a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .header .data-source a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Accordion Styles */
+        .accordion-panel {
+            width: 500px;
+            background-color: white;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+            z-index: 500;
+            transition: transform 0.3s ease;
+        }
+
+        .accordion {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .accordion-item {
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+        }
+
+        .accordion-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .accordion-header:hover {
+            background-color: #1a2530;
+        }
+
+        .accordion-header.active {
+            background-color: #34495e;
+        }
+
+        .accordion-content {
+            background-color: white;
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .accordion-content.active {
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        /* License Accordion Styles */
+        .license-accordion {
+            margin-bottom: 10px;
+        }
+
+        .license-header {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .license-header:hover {
+            background-color: #2980b9;
+        }
+
+        .license-header.active {
+            background-color: #2c6c91;
+        }
+
+        .license-content {
+            background-color: #f8f9fa;
+            padding: 0;
+            /* max-height: 0; */
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            border-radius: 0 0 6px 6px;
+            display: none;
+        }
+
+        .license-content.active {
+            display: block;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .licensee-item {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .licensee-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #3498db;
+        }
+
+        .licensee-item.active {
+            border-color: #3498db;
+            background-color: #ecf8ff;
+        }
+
+        .licensee-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .licensee-name-eng {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .licensee-details {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .licensee-detail-item {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .licensee-detail-item i {
+            color: #2c6c91;
+            margin-right: 8px;
+            margin-top: 3px;
+            width: 16px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .btn {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background-color: #1a2530;
+        }
+
+        .btn.active {
+            background-color: #34495e;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            font-size: 0.9rem;
+        }
+
+        .info-box h4 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        /* Search Box */
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        /* Data Display Container */
+        .data-container {
+            flex: 1;
+            position: relative;
+            background-color: white;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .data-display {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .licensee-detail-panel {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .detail-header {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .detail-subtitle {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-label {
+            width: 150px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: #333;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .no-data-message i {
+            font-size: 3rem;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 6px 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            border-top: 1px solid #4a6491;
+            z-index: 1000;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .footer-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #3498db;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .accordion-panel {
+                width: 100%;
+                height: 40vh;
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .header p {
+                font-size: 0.85rem;
+            }
+
+            .accordion-header {
+                padding: 12px 15px;
+                font-size: 0.95rem;
+            }
+
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.95rem;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+
+            .footer-links {
+                justify-content: center;
+            }
+        }
+
+        /* For very small screens like iPhone SE */
+        @media (max-width: 375px) {
+            .header {
+                padding: 12px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.2rem;
+            }
+
+            .header p {
+                font-size: 0.8rem;
+            }
+
+            .accordion {
+                padding: 10px;
+            }
+
+            .accordion-header {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+
+            .accordion-content.active {
+                padding: 15px;
+            }
+
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+
+            .footer {
+                padding: 10px 15px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Stats Display */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 10px 0;
+            border-top: 1px dashed #ddd;
+            font-size: 0.9rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        /* Toggle panel button for mobile */
+        .panel-toggle {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .panel-toggle {
+                display: block;
+            }
+
+            .accordion-panel.collapsed {
+                transform: translateY(-100%);
+                height: 0;
+                overflow: hidden;
+            }
+        }
+
+        /* Loading indicator */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* License Counter */
+        .license-counter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+
+        .licensee-counter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #3498db;
+            color: white;
+            border-radius: 10px;
+            padding: 1px 8px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+
+        /* Expiry Status */
+        .expiry-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .expiry-soon {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .expiry-normal {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .expiry-past {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        /* Data Source Link */
+        .data-source-link {
+            display: inline-block;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .data-source-link:hover {
+            background-color: #3498db;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1><i class="fas fa-file-contract"></i> 現有放債人牌照持牌人查詢系統</h1>
+        <p>查詢公司註冊處提供的現有放債人牌照持牌人詳細資訊</p>
+        <div class="data-source">
+            數據來源: <a href="http://www.cr.gov.hk/datagovhk/psi/ml_licensees.csv" target="_blank">公司註冊處 - 現有放債人牌照持牌人名單</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <button class="panel-toggle" id="panelToggle" style="display:none">
+            <i class="fas fa-bars"></i> 控制面板
+        </button>
+
+        <div class="accordion-panel" id="accordionPanel">
+            <div class="accordion">
+                <!-- Licensees List -->
+                <div class="accordion-item">
+                    <div class="accordion-header active" id="headerLicensees">
+                        <span><i class="fas fa-list"></i> 放債人持牌人名單</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content active" id="contentLicensees">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" class="search-input"
+                                placeholder="搜尋持牌人名稱 (中/英文) 或牌照號碼...">
+                        </div>
+
+                        <div class="info-box">
+                            <h4><i class="fas fa-info-circle"></i> 使用說明</h4>
+                            <p>1. 點擊到期日分組展開查看該期間的持牌人</p>
+                            <p>2. 點擊持牌人查看詳細資訊</p>
+                            <p>3. 使用搜尋框快速查找特定持牌人</p>
+                            <p>4. 數據按到期日期降序排列</p>
+                        </div>
+
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalLicensees">0</div>
+                                <div class="stat-label">總持牌人數</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="activeLicensees">0</div>
+                                <div class="stat-label">有效牌照</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="expiringSoon">0</div>
+                                <div class="stat-label">即將到期</div>
+                            </div>
+                        </div>
+
+                        <div id="licenseesList">
+                            <!-- Licensees will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Management -->
+                <div class="accordion-item">
+                    <div class="accordion-header" id="headerData">
+                        <span><i class="fas fa-database"></i> 數據管理</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content" id="contentData">
+                        <div class="control-group">
+                            <label><i class="fas fa-sync-alt"></i> 更新數據</label>
+                            <button class="btn btn-primary" id="refreshDataBtn">
+                                <i class="fas fa-redo"></i> 重新載入數據
+                            </button>
+                        </div>
+
+                        <div class="control-group">
+                            <label><i class="fas fa-download"></i> 下載原始數據</label>
+                            <a href="http://www.cr.gov.hk/datagovhk/psi/ml_licensees.csv" class="btn btn-primary"
+                                target="_blank">
+                                <i class="fas fa-file-csv"></i> 下載 CSV 檔案
+                            </a>
+                        </div>
+
+                        <div class="info-box">
+                            <h4><i class="fas fa-exclamation-circle"></i> 注意事項</h4>
+                            <p>• 數據來自公司註冊處官方發佈</p>
+                            <p>• 系統每小時自動檢查更新</p>
+                            <p>• 最後更新時間: <span id="lastUpdateTime">載入中...</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-container" id="dataContainer">
+            <div class="data-display">
+                <div id="licenseeDetail">
+                    <div class="no-data-message">
+                        <i class="fas fa-search"></i>
+                        <h3>請選擇持牌人查看詳細資訊</h3>
+                        <p>從左側列表中點擊持牌人以查看其詳細資料</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-copyright">
+                數據由公司註冊處提供
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const PROXY_URL = "https://cors-anywhere.herokuapp.com";
+
+        // Initialize variables
+        let allLicensees = [];
+        let groupedByExpiryDate = {};
+        let selectedLicensee = null;
+        let dataLastUpdated = null;
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            setupAccordion();
+            setupEventListeners();
+            loadLicenseesData();
+
+            // Handle mobile panel toggle
+            const panelToggle = document.getElementById('panelToggle');
+            const accordionPanel = document.getElementById('accordionPanel');
+
+            panelToggle.addEventListener('click', function () {
+                accordionPanel.classList.toggle('collapsed');
+                panelToggle.innerHTML = accordionPanel.classList.contains('collapsed')
+                    ? '<i class="fas fa-bars"></i> 顯示控制面板'
+                    : '<i class="fas fa-bars"></i> 隱藏控制面板';
+            });
+        });
+
+        // Setup accordion functionality
+        function setupAccordion() {
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', function (e) {
+                    const content = this.nextElementSibling;
+                    const isActive = this.classList.contains('active');
+
+                    // Close all accordion items
+                    accordionHeaders.forEach(h => {
+                        h.classList.remove('active');
+                        h.querySelector('.fa-chevron-down').style.transform = 'rotate(0deg)';
+                    });
+
+                    document.querySelectorAll('.accordion-content').forEach(c => {
+                        c.classList.remove('active');
+                    });
+
+                    // Open clicked item if it was not active
+                    if (!isActive) {
+                        this.classList.add('active');
+                        content.classList.add('active');
+                        this.querySelector('.fa-chevron-down').style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+        }
+
+        // Setup button event listeners
+        function setupEventListeners() {
+            // Refresh data button
+            document.getElementById('refreshDataBtn').addEventListener('click', function () {
+                loadLicenseesData();
+            });
+
+            // Search input
+            document.getElementById('searchInput').addEventListener('input', function (e) {
+                filterLicensees(e.target.value);
+            });
+        }
+
+        // Load licensees data from CSV
+        async function loadLicenseesData() {
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'loading';
+            loadingIndicator.id = 'loadingIndicator';
+            loadingIndicator.innerHTML = `
+                <div class="spinner"></div>
+                <p>正在載入持牌人數據...</p>
+            `;
+            document.body.appendChild(loadingIndicator);
+            loadingIndicator.style.display = 'block';
+
+            try {
+                // Using the specified CSV endpoint
+                const csvUrl = 'http://www.cr.gov.hk/datagovhk/psi/ml_licensees.csv';
+
+                const response = await fetch(`${PROXY_URL}/${csvUrl}`);
+
+                if (!response.ok) {
+                    alert(`請先啟用 CORS Proxy 服務（${PROXY_URL}），HTTP 狀態碼: ${response.status}。`);
+                    window.open(PROXY_URL, "_blank");
+                    return;
+                }
+
+                const csvText = await response.text();
+                allLicensees = parseCSV(csvText);
+
+                // Format dates and sort
+                allLicensees.forEach(licensee => {
+                    // Format Expiry_Date to yyyy-MM-dd
+                    if (licensee.Expiry_Date) {
+                        const dateParts = licensee.Expiry_Date.split('-');
+                        if (dateParts.length === 3) {
+                            const day = dateParts[0];
+                            const month = dateParts[1];
+                            const year = dateParts[2].length === 2 ? '20' + dateParts[2] : dateParts[2];
+                            licensee.formattedExpiryDate = `${year}-${month}-${day}`;
+                            licensee.expiryDateObj = new Date(`${year}-${month}-${day}`);
+                        }
+                    }
+                });
+
+                // Sort by expiry date descending
+                allLicensees.sort((a, b) => {
+                    if (!a.expiryDateObj && !b.expiryDateObj) return 0;
+                    if (!a.expiryDateObj) return 1;
+                    if (!b.expiryDateObj) return -1;
+                    return b.expiryDateObj - a.expiryDateObj;
+                });
+
+                // Group by expiry date (format: yyyy-MM)
+                groupedByExpiryDate = {};
+                allLicensees.forEach(licensee => {
+                    if (licensee.formattedExpiryDate) {
+                        const expiryMonth = licensee.formattedExpiryDate.substring(0, 8); // yyyy-MMM
+                        if (!groupedByExpiryDate[expiryMonth]) {
+                            groupedByExpiryDate[expiryMonth] = [];
+                        }
+                        groupedByExpiryDate[expiryMonth].push(licensee);
+                    } else {
+                        // For licenses without expiry date
+                        const noDateKey = '無到期日';
+                        if (!groupedByExpiryDate[noDateKey]) {
+                            groupedByExpiryDate[noDateKey] = [];
+                        }
+                        groupedByExpiryDate[noDateKey].push(licensee);
+                    }
+                });
+
+                // Update last updated time
+                dataLastUpdated = new Date();
+                document.getElementById('lastUpdateTime').textContent =
+                    dataLastUpdated.toLocaleString('zh-HK');
+
+                // Update stats
+                updateStats();
+
+                // Render accordion list
+                renderLicenseesList();
+
+            } catch (error) {
+                console.error('Error loading licensees data:', error);
+                showNotification('無法載入持牌人數據，請檢查網絡連接或稍後再試。', 'error');
+
+                // Load sample data if real data fails
+                loadSampleData();
+            } finally {
+                loadingIndicator.style.display = 'none';
+                loadingIndicator.remove();
+            }
+        }
+
+        // Parse CSV text to array of objects
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            if (lines.length === 0) return [];
+
+            // Parse headers
+            const headers = lines[0].split(',');
+            const result = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+
+                const values = lines[i].split(',');
+                const obj = {};
+
+                for (let j = 0; j < headers.length; j++) {
+                    const header = headers[j].trim();
+                    const value = values[j] ? values[j].trim() : '';
+                    obj[header] = value;
+                }
+
+                result.push(obj);
+            }
+
+
+            return result;
+        }
+
+        // Load sample data for demonstration
+        function loadSampleData() {
+            allLicensees = [
+                {
+                    MLR_No: "6652",
+                    ML_Lic_No: "1625/2025",
+                    Period: "As at 30 November 2025",
+                    Name_Eng: "Bycard Group Limited",
+                    Name_Chi: "",
+                    Expiry_Date: "27-Nov-26",
+                    Remarks: ""
+                },
+                {
+                    MLR_No: "6653",
+                    ML_Lic_No: "1626/2025",
+                    Period: "As at 30 November 2025",
+                    Name_Eng: "Test Company Limited",
+                    Name_Chi: "測試有限公司",
+                    Expiry_Date: "15-Dec-25",
+                    Remarks: "Sample remark"
+                },
+                {
+                    MLR_No: "6654",
+                    ML_Lic_No: "1627/2025",
+                    Period: "As at 30 November 2025",
+                    Name_Eng: "Another Example Ltd",
+                    Name_Chi: "另一例子有限公司",
+                    Expiry_Date: "30-Jan-26",
+                    Remarks: ""
+                }
+            ];
+
+            // Process sample data
+            allLicensees.forEach(licensee => {
+                if (licensee.Expiry_Date) {
+                    const dateParts = licensee.Expiry_Date.split('-');
+                    if (dateParts.length === 3) {
+                        const day = dateParts[0];
+                        const month = dateParts[1];
+                        const year = dateParts[2].length === 2 ? '20' + dateParts[2] : dateParts[2];
+                        licensee.formattedExpiryDate = `${year}-${month}-${day}`;
+                        licensee.expiryDateObj = new Date(`${year}-${month}-${day}`);
+                    }
+                }
+            });
+
+            // Sort by expiry date descending
+            allLicensees.sort((a, b) => {
+                if (!a.expiryDateObj && !b.expiryDateObj) return 0;
+                if (!a.expiryDateObj) return 1;
+                if (!b.expiryDateObj) return -1;
+                return b.expiryDateObj - a.expiryDateObj;
+            });
+
+            // Group by expiry date
+            groupedByExpiryDate = {};
+            allLicensees.forEach(licensee => {
+                if (licensee.formattedExpiryDate) {
+                    const expiryMonth = licensee.formattedExpiryDate.substring(0, 8); // yyyy-MMM
+                    if (!groupedByExpiryDate[expiryMonth]) {
+                        groupedByExpiryDate[expiryMonth] = [];
+                    }
+                    groupedByExpiryDate[expiryMonth].push(licensee);
+                }
+            });
+
+            // Update last updated time
+            dataLastUpdated = new Date();
+            document.getElementById('lastUpdateTime').textContent =
+                dataLastUpdated.toLocaleString('zh-HK') + ' (示例數據)';
+
+            // Update stats
+            updateStats();
+
+            // Render accordion list
+            renderLicenseesList();
+
+            showNotification('已載入示例數據。真實數據載入失敗。', 'warning');
+        }
+
+        // Update statistics display
+        function updateStats() {
+            const totalLicensees = allLicensees.length;
+
+            // Count active and expiring soon licenses
+            const now = new Date();
+            const thirtyDaysFromNow = new Date();
+            thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+            let activeLicensees = 0;
+            let expiringSoon = 0;
+
+            allLicensees.forEach(licensee => {
+                if (licensee.expiryDateObj) {
+                    if (licensee.expiryDateObj > now) {
+                        activeLicensees++;
+
+                        if (licensee.expiryDateObj <= thirtyDaysFromNow) {
+                            expiringSoon++;
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('totalLicensees').textContent = totalLicensees;
+            document.getElementById('activeLicensees').textContent = activeLicensees;
+            document.getElementById('expiringSoon').textContent = expiringSoon;
+        }
+
+        const convertEng2NumericMonth = (iMonth) => {
+            const monthMap = {
+                'JAN': '01',
+                'FEB': '02',
+                'MAR': '03',
+                'APR': '04',
+                'MAY': '05',
+                'JUN': '06',
+                'JUL': '07',
+                'AUG': '08',
+                'SEP': '09',
+                'OCT': '10',
+                'NOV': '11',
+                'DEC': '12'
+            };
+            return monthMap[iMonth.toUpperCase()] || '00';
+        };
+
+        // Render licensees list in accordion
+        function renderLicenseesList() {
+            const container = document.getElementById('licenseesList');
+            container.innerHTML = '';
+
+            // Sort expiry months descending
+            const sortedExpiryMonths = Object.keys(groupedByExpiryDate).sort((a, b) => {
+                if (a === '無到期日') return 1;
+                if (b === '無到期日') return -1;
+                return b.localeCompare(a);
+            });
+
+            sortedExpiryMonths.forEach(expiryMonth => {
+                const licensees = groupedByExpiryDate[expiryMonth];
+
+                // Create license accordion item
+                const licenseAccordion = document.createElement('div');
+                licenseAccordion.className = 'license-accordion';
+
+                // Format display date
+                let displayDate = expiryMonth;
+                if (expiryMonth !== '無到期日') {
+                    const [year, month] = expiryMonth.split('-');
+                    displayDate = `到期日：${year}年${convertEng2NumericMonth(month)}月`;
+                }
+
+                licenseAccordion.innerHTML = `
+                    <div class="license-header">
+                        <span>
+                            ${displayDate}
+                            <span class="licensee-counter">${licensees.length}</span>
+                        </span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="license-content"></div>
+                `;
+
+                container.appendChild(licenseAccordion);
+
+                // Add click event to license header
+                const licenseHeader = licenseAccordion.querySelector('.license-header');
+                const licenseContent = licenseAccordion.querySelector('.license-content');
+
+                licenseHeader.addEventListener('click', function () {
+                    const isActive = this.classList.contains('active');
+
+                    // Toggle active class
+                    this.classList.toggle('active');
+                    licenseContent.classList.toggle('active');
+
+                    // Rotate icon
+                    const icon = this.querySelector('.fa-chevron-down');
+                    icon.style.transform = isActive ? 'rotate(0deg)' : 'rotate(180deg)';
+                });
+
+                // Add licensee items
+                const licenseesContainer = document.createElement('div');
+                licensees.forEach(licensee => {
+                    const licenseeItem = createLicenseeItem(licensee);
+                    licenseesContainer.appendChild(licenseeItem);
+                });
+
+                licenseContent.appendChild(licenseesContainer);
+            });
+
+            // Setup licensee item click events
+            setupLicenseeItemEvents();
+        }
+
+        // Create a licensee item element
+        function createLicenseeItem(licensee) {
+            const licenseeItem = document.createElement('div');
+            licenseeItem.className = 'licensee-item';
+            licenseeItem.dataset.mlrNo = licensee.MLR_No;
+
+            // Determine expiry status
+            let expiryStatus = '';
+            if (licensee.expiryDateObj) {
+                const now = new Date();
+                const thirtyDaysFromNow = new Date();
+                thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+                if (licensee.expiryDateObj < now) {
+                    expiryStatus = '<span class="expiry-status expiry-past">已過期</span>';
+                } else if (licensee.expiryDateObj <= thirtyDaysFromNow) {
+                    expiryStatus = '<span class="expiry-status expiry-soon">即將到期</span>';
+                } else {
+                    expiryStatus = '<span class="expiry-status expiry-normal">有效</span>';
+                }
+            }
+
+            // Format expiry date for display
+            let displayExpiryDate = licensee.Expiry_Date || '未提供';
+            if (licensee.formattedExpiryDate) {
+                const [year, month, day] = licensee.formattedExpiryDate.split('-');
+                displayExpiryDate = `${year}年${convertEng2NumericMonth(month)}月${day}日`;
+            }
+
+            licenseeItem.innerHTML = `
+                <div class="licensee-name">
+                    ${licensee.Name_Chi || licensee.Name_Eng}
+                    ${expiryStatus}
+                </div>
+                ${licensee.Name_Chi && licensee.Name_Eng ?
+                    `<div class="licensee-name-eng">${licensee.Name_Eng}</div>` : ''}
+                <div class="licensee-details">
+                    <div class="licensee-detail-item">
+                        <i class="fas fa-id-card"></i>
+                        <span>牌照號碼: ${licensee.ML_Lic_No || '未提供'}</span>
+                    </div>
+                    <div class="licensee-detail-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>到期日: ${displayExpiryDate}</span>
+                    </div>
+                </div>
+            `;
+
+            return licenseeItem;
+        }
+
+        // Setup licensee item click events
+        function setupLicenseeItemEvents() {
+            document.querySelectorAll('.licensee-item').forEach(item => {
+                item.addEventListener('click', function () {
+                    // Remove active class from all licensee items
+                    document.querySelectorAll('.licensee-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+
+                    // Add active class to clicked item
+                    this.classList.add('active');
+
+                    // Find and display the corresponding licensee details
+                    const mlrNo = this.dataset.mlrNo;
+                    const licensee = allLicensees.find(l => l.MLR_No === mlrNo);
+
+                    if (licensee) {
+                        selectLicensee(licensee);
+                    }
+                });
+            });
+        }
+
+        // Select and display licensee details
+        function selectLicensee(licensee) {
+            selectedLicensee = licensee;
+
+            // Format dates for display
+            let displayExpiryDate = licensee.Expiry_Date || '未提供';
+            if (licensee.formattedExpiryDate) {
+                const [year, month, day] = licensee.formattedExpiryDate.split('-');
+                displayExpiryDate = `${year}年${convertEng2NumericMonth(month)}月${day}日`;
+            }
+
+            // Determine expiry status with more details
+            let expiryStatus = '';
+            let statusClass = '';
+            let statusText = '';
+
+            if (licensee.expiryDateObj) {
+                const now = new Date();
+                const thirtyDaysFromNow = new Date();
+                thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+                if (licensee.expiryDateObj < now) {
+                    statusClass = 'expiry-past';
+                    statusText = '已過期';
+
+                    const daysPast = Math.floor((now - licensee.expiryDateObj) / (1000 * 60 * 60 * 24));
+                    expiryStatus = `已過期 ${daysPast} 天`;
+                } else if (licensee.expiryDateObj <= thirtyDaysFromNow) {
+                    statusClass = 'expiry-soon';
+                    statusText = '即將到期';
+
+                    const daysRemaining = Math.floor((licensee.expiryDateObj - now) / (1000 * 60 * 60 * 24));
+                    expiryStatus = `將於 ${daysRemaining} 天後到期`;
+                } else {
+                    statusClass = 'expiry-normal';
+                    statusText = '有效';
+
+                    const daysRemaining = Math.floor((licensee.expiryDateObj - now) / (1000 * 60 * 60 * 24));
+                    expiryStatus = `將於 ${daysRemaining} 天後到期`;
+                }
+            }
+
+            const detailHTML = `
+                <div class="licensee-detail-panel">
+                    <div class="detail-header">
+                        <div class="detail-title">
+                            ${licensee.Name_Chi || licensee.Name_Eng}
+                            <span class="expiry-status ${statusClass}">${statusText}</span>
+                        </div>
+                        ${licensee.Name_Chi && licensee.Name_Eng ?
+                    `<div class="detail-subtitle">${licensee.Name_Eng}</div>` : ''}
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">MLR 編號</div>
+                        <div class="detail-value">${licensee.MLR_No || '未提供'}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">放債人牌照號碼</div>
+                        <div class="detail-value">${licensee.ML_Lic_No || '未提供'}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">期間</div>
+                        <div class="detail-value">${licensee.Period || '未提供'}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">到期日</div>
+                        <div class="detail-value">
+                            ${displayExpiryDate}
+                            ${expiryStatus ? `<br><small>${expiryStatus}</small>` : ''}
+                        </div>
+                    </div>
+                    
+                    ${licensee.Remarks ? `
+                    <div class="detail-row">
+                        <div class="detail-label">備註</div>
+                        <div class="detail-value">${licensee.Remarks}</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">數據狀態</div>
+                        <div class="detail-value">
+                            <small>最後更新: ${dataLastUpdated ? dataLastUpdated.toLocaleString('zh-HK') : '未知'}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('licenseeDetail').innerHTML = detailHTML;
+
+            // Scroll to top of detail panel
+            document.getElementById('dataContainer').scrollTop = 0;
+
+            // Show notification
+            showNotification(`已選取: ${licensee.Name_Chi || licensee.Name_Eng}`);
+        }
+
+        // Filter licensees based on search input
+        function filterLicensees(searchTerm) {
+            const searchLower = searchTerm.toLowerCase().trim();
+
+            if (!searchLower) {
+                // Show all licensees
+                document.querySelectorAll('.licensee-item').forEach(item => {
+                    item.style.display = 'block';
+                });
+
+                document.querySelectorAll('.license-accordion').forEach(licenseGroup => {
+                    licenseGroup.style.display = 'block';
+                });
+
+                return;
+            }
+
+            // Filter licensee items
+            document.querySelectorAll('.licensee-item').forEach(item => {
+                const licenseeName = item.querySelector('.licensee-name').textContent.toLowerCase();
+                const licenseeEngName = item.querySelector('.licensee-name-eng') ?
+                    item.querySelector('.licensee-name-eng').textContent.toLowerCase() : '';
+                const licenseeDetails = item.querySelector('.licensee-details').textContent.toLowerCase();
+
+                if (licenseeName.includes(searchLower) ||
+                    licenseeEngName.includes(searchLower) ||
+                    licenseeDetails.includes(searchLower)) {
+                    item.style.display = 'block';
+
+                    // Ensure parent license group is visible
+                    const licenseAccordion = item.closest('.license-accordion');
+                    if (licenseAccordion) {
+                        licenseAccordion.style.display = 'block';
+
+                        // Expand the license group
+                        const licenseHeader = licenseAccordion.querySelector('.license-header');
+                        const licenseContent = licenseAccordion.querySelector('.license-content');
+
+                        if (!licenseHeader.classList.contains('active')) {
+                            licenseHeader.classList.add('active');
+                            licenseContent.classList.add('active');
+                            licenseHeader.querySelector('.fa-chevron-down').style.transform = 'rotate(180deg)';
+                        }
+                    }
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Hide license groups with no visible licensees
+            document.querySelectorAll('.license-accordion').forEach(licenseGroup => {
+                const visibleItems = licenseGroup.querySelectorAll('.licensee-item[style="display: block"]');
+                if (visibleItems.length === 0) {
+                    licenseGroup.style.display = 'none';
+                }
+            });
+        }
+
+        // Show temporary notification
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+
+            // Set background color based on type
+            let bgColor = '#2c3e50';
+            if (type === 'error') bgColor = '#e74c3c';
+            if (type === 'warning') bgColor = '#f39c12';
+            if (type === 'success') bgColor = '#27ae60';
+
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: ${bgColor};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                font-weight: 500;
+                max-width: 300px;
+                animation: fadeInOut 3s ease-in-out;
+            `;
+
+            // Add keyframes for animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeInOut {
+                    0% { opacity: 0; transform: translateY(-10px); }
+                    10% { opacity: 1; transform: translateY(0); }
+                    90% { opacity: 1; transform: translateY(0); }
+                    100% { opacity: 0; transform: translateY(-10px); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Remove after animation completes
+            setTimeout(() => {
+                notification.remove();
+                style.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>
