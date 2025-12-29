@@ -925,10 +925,44 @@
             const headers = lines[0].split(',');
             const result = [];
 
+
+            const parseCSVLine = (line) => {
+                const result = [];
+                let inQuotes = false;
+                let currentField = '';
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    const nextChar = line[i + 1];
+
+                    if (char === '"') {
+                        // Handle escaped quotes ("")
+                        if (inQuotes && nextChar === '"') {
+                            currentField += '"';
+                            i++; // Skip next quote
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(currentField.trim());
+                        currentField = '';
+                    } else {
+                        currentField += char;
+                    }
+                }
+
+                // Add the last field
+                result.push(currentField.trim());
+
+                return result;
+            }
+
+
             for (let i = 1; i < lines.length; i++) {
                 if (lines[i].trim() === '') continue;
 
-                const values = lines[i].split(',');
+                // const values = lines[i].split(',');
+                const values = parseCSVLine(lines[i]);
                 const obj = {};
 
                 for (let j = 0; j < headers.length; j++) {
@@ -1366,7 +1400,7 @@
 
             // Hide license groups with no visible licensees
             document.querySelectorAll('.license-accordion').forEach(licenseGroup => {
-                const visibleItems = licenseGroup.querySelectorAll('.licensee-item[style="display: block"]');
+                const visibleItems = licenseGroup.querySelectorAll('.licensee-item[style*="display: block"]');
                 if (visibleItems.length === 0) {
                     licenseGroup.style.display = 'none';
                 }
